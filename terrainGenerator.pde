@@ -1,4 +1,3 @@
-
 import peasy.*;
 
 final int size = 200;
@@ -10,22 +9,22 @@ final float yExponent = 3.25; // Increasing this will make valleys lower and bum
 float terrainMorph = 0; // 3D noise dimension representing time.
 
 
-float seaLevel = 0.14;
+float seaLevel = 0.1;
 
 float[][] climate = new float[size][size];
-final float climateIncrement = 0.002; // How much the biome changes from one to the next. Larger num == smaller biomes.
+final float climateIncrement = 0.0012; // How much the biome changes from one to the next. Larger num == smaller biomes.
 float climateMorph = 0; // 3D noise dimension representing time.
 
 
 float[][] clouds = new float[size][size];
-final float cloudIncrement = 0.02; // Speed at which clouds morph
-final float cloudThickness = 12; // Multiplier for cloud brightness.
-final float cloudSpread = 10; // Exponent for cloud brightness, increases concentration.
-float cloudMorph = 0.1; // 3D noise dimension representing time.
+final float cloudIncrement = 0.025; // How much the clouds change from one tile to another
+final float cloudThickness = 6; // Multiplier for cloud opacity.
+final float cloudSpread = 11; // Exponent for cloud opacity, increases concentration.
+float cloudMorph = 0; // 3D noise dimension representing time.
 
 float cloudOffset = 0;
-final float cloudSpeed = 0.5; // Movement speed of clouds
-float cloudMorphSpeed = 0.01; // 3D noise dimension representing time.
+final float cloudSpeed = 0.3;
+float cloudMorphSpeed = 0.008;
 
 
 PeasyCam cam;
@@ -33,11 +32,12 @@ PeasyCam cam;
 int speed = 5;
 float xOffset = 100000; // Offset these to avoid seeing lines of symmetry around origin.
 float zOffset = 100000;
-boolean l = false, r = false, f = false, b = false, k1 = false, k2 = false, k3 = false, k4 = false;
+boolean l = false, r = false, f = false, b = false, t1 = false, t2 = false, c1 = false, c2 = false;
 
 
-color warmWater = color(50, 90, 190);
-color coldWater = color(35, 60, 150);
+color warmWater = color(40, 150, 170);
+color normalWater = color(50, 100, 190);
+color coldWater = color(35, 70, 150);
 color ice = color(150, 170, 230);
 color beach = color(210, 180, 100);
 color rocks = color(100, 80, 90);
@@ -57,8 +57,10 @@ color snow = color(220, 230, 255);
 
 
 color biome(float y, float c) {
+    
     if (y < seaLevel) {
-        if (c < 0.75) return warmWater;
+        if (c < 0.38) return warmWater;
+        if (c < 0.75) return normalWater;
         if (c < 0.86) return coldWater;
         return ice;
     }
@@ -67,16 +69,16 @@ color biome(float y, float c) {
     };
     
     if (y < 0.36) {
-        if (c < 0.41) return sand;
+        if (c < 0.38) return sand;
         if (c < 0.52) return savannah;
         if (c < 0.75) return plains;
         if (c < 0.86) return tundra;
         return snow;
     }
 
-    if (y < 0.55) {
-        if (c < 0.41) return mesa;
-        if (c < 0.52) return rainForest;
+    if (y < 0.6) {
+        if (c < 0.38) return mesa;
+        if (c < 0.5) return rainForest;
         if (c < 0.75) return forest;
         return taiga;
     }
@@ -84,14 +86,6 @@ color biome(float y, float c) {
     if (y < 0.875) return mountain;
     return snow;
 }
-
-
-
-float ridgeNoise(float nx, float ny) {
-    return 2 * (0.5 - abs(0.5 - noise(nx, ny)));
-}
-
-
 
 void generate() {
     
@@ -106,6 +100,7 @@ void generate() {
                     0.25 * noise(4 * nx, 4 * nz, cloudMorph);
                 y = map(y, 0, 1.25, 0, 1);
                 y = pow(y, cloudSpread);
+                y = min(1, y);
         
                 clouds[x][z] = y;
             }   
@@ -119,7 +114,6 @@ void generate() {
                 y = map(y, 0, 1.3, 0, 1);
                 
                 y = pow(y, yExponent);
-                y = 10 * (y/10);
                 terrain[x][z] = y;
             }
             {
@@ -129,7 +123,7 @@ void generate() {
                 float y = noise(nx, nz, climateMorph)
                     + 0.5 * noise(2 * nx, 2 * nz, 2* climateMorph)
                     + 0.25 * noise(4 * nx, 4 * nz, 4 * climateMorph);
-                y = map(y, 0, 1.32, 0, 1);
+                y = map(y, 0, 1.4, 0, 1);
                 climate[x][z] = y;
             }
         }
@@ -153,16 +147,16 @@ public void keyPressed() {
         b = true;
     }
     if (key == '1') {
-        k1 = true;
+        t1 = true;
     }
     if (key == '2') {
-        k2 = true;
+        t2 = true;
     }
     if (key == '3') {
-        k3 = true;
+        c1 = true;
     }
     if (key == '4') {
-        k4 = true;
+        c2 = true;
     }
 }
 
@@ -181,20 +175,19 @@ public void keyReleased() {
         b = false;
     }
     if (key == '1') {
-        k1 = false;
+        t1 = false;
     }
     if (key == '2') {
-        k2 = false;
+        t2 = false;
     }
     if (key == '3') {
-        k3 = false;
+        c1 = false;
     }
     if (key == '4') {
-        k4 = false;
+        c2 = false;
     }
     if (key == 'r' || key == 'R') {
         noiseSeed((long)random(0, 1000000000));
-        generate();
     }
 }
 
@@ -206,7 +199,6 @@ void setup() {
     cam.setMinimumDistance(1);
     cam.setMaximumDistance(1000);
 
-    generate();
 }
 
 
@@ -225,16 +217,16 @@ void draw() {
     } else if (b) {
         zOffset += speed;
     }
-    if (k1) {
+    if (t1) {
         terrainMorph -= terrainIncrement;
     }
-    if (k2) {
+    if (t2) {
         terrainMorph += terrainIncrement;
     }
-    if (k3) {
+    if (c1) {
         climateMorph -= climateIncrement;
     }
-    if (k4) {
+    if (c2) {
         climateMorph += climateIncrement;
     }
     
@@ -248,30 +240,28 @@ void draw() {
     noStroke();
     
 
-    int y = 125;
+    int h = 125;
     for (int z = 0; z < size-1; z++) {
         beginShape(TRIANGLE_STRIP);
         for (int x = 0; x < size; x++) {
-            color c = biome(terrain[x][z], climate[x][z]);
+            
             // Get tile color according to biome, which takes terrain and climate into account.
+            color c = biome(terrain[x][z], climate[x][z]);
             
             float shade = map(clouds[x][z], 0, 1, 1, 0.5); // Shade tiles under clouds.
             shade = min(shade, 1);
             fill(red(c) * shade, green(c) * shade, blue(c) * shade);
             
-            
-            float e = terrain[x][z];
-            e = max(e, seaLevel);
-            float next = terrain[x][z+1];
-            next = max(next    , seaLevel);
+            float e = max(terrain[x][z], seaLevel);
+            float next = max(terrain[x][z+1], seaLevel);
 
-            vertex(x, y - e * yScale, z);
-            vertex(x, y - next * yScale, z+1);
+            vertex(x, h - e * yScale, z);
+            vertex(x, h - next * yScale, z+1);
         }
         endShape();
     }
     
-    y = 0;
+    h = 0;
     for (int z = 0; z < size-1; z++) {
         beginShape(TRIANGLE_STRIP);
         for (int x = 0; x < size; x++) {
@@ -279,8 +269,8 @@ void draw() {
             alpha *= cloudThickness;
             fill(255, 255, 255, alpha*255);
             
-            vertex(x, y - clouds[x][z], z);
-            vertex(x, y - clouds[x][z], z+1);
+            vertex(x, h - clouds[x][z], z);
+            vertex(x, h - clouds[x][z], z+1);
         }
         endShape();
     }
