@@ -5,14 +5,14 @@ final int size = 200;
 float[][] terrain = new float[size][size];
 final float terrainIncrement = 0.017; // How much the terrain changes from one tile to the next.
 final int yScale = 40; // Multiplier for mountain height.
-final float yExponent = 3.25; // Increasing this will make valleys lower and bumps higher.
+final float yExponent = 1.85; // Increasing this will make valleys lower and bumps higher.
 float terrainMorph = 0; // 3D noise dimension representing time.
 
 
 float seaLevel = 0.1;
 
 float[][] climate = new float[size][size];
-final float climateIncrement = 0.0012; // How much the biome changes from one to the next. Larger num == smaller biomes.
+final float climateIncrement = 0.0013; // How much the biome changes from one to the next. Larger num == smaller biomes.
 float climateMorph = 0; // 3D noise dimension representing time.
 
 
@@ -35,7 +35,7 @@ float zOffset = 100000;
 boolean l = false, r = false, f = false, b = false, t1 = false, t2 = false, c1 = false, c2 = false;
 
 
-color warmWater = color(40, 150, 170);
+color warmWater = color(40, 145, 170);
 color normalWater = color(50, 100, 190);
 color coldWater = color(35, 70, 150);
 color ice = color(150, 170, 230);
@@ -59,25 +59,25 @@ color snow = color(220, 230, 255);
 color biome(float y, float c) {
     
     if (y < seaLevel) {
-        if (c < 0.38) return warmWater;
+        if (c < 0.37) return warmWater;
         if (c < 0.75) return normalWater;
         if (c < 0.86) return coldWater;
         return ice;
     }
-    if (y < seaLevel + 0.05) {
+    if (y < seaLevel + 0.04) {
         return sand;
     };
     
     if (y < 0.36) {
-        if (c < 0.38) return sand;
-        if (c < 0.52) return savannah;
+        if (c < 0.37) return sand;
+        if (c < 0.5) return savannah;
         if (c < 0.75) return plains;
         if (c < 0.86) return tundra;
         return snow;
     }
 
     if (y < 0.6) {
-        if (c < 0.38) return mesa;
+        if (c < 0.37) return mesa;
         if (c < 0.5) return rainForest;
         if (c < 0.75) return forest;
         return taiga;
@@ -111,6 +111,10 @@ void generate() {
                 float y = noise(nx, nz, terrainMorph) +
                     0.5 * noise(2 * nx, 2 * nz, 2 * terrainMorph) +
                    0.25 * noise(4 * nx, 4 * nz, 4 * terrainMorph);
+                   y*=y = noise(nx, nz, terrainMorph) +
+                    0.5 * noise(2 * nx, 2 * nz, 2 * terrainMorph) +
+                   0.25 * noise(4 * nx, 4 * nz, 4 * terrainMorph);
+                   y *= 0.75;
                 y = map(y, 0, 1.3, 0, 1);
                 
                 y = pow(y, yExponent);
@@ -123,12 +127,11 @@ void generate() {
                 float y = noise(nx, nz, climateMorph)
                     + 0.5 * noise(2 * nx, 2 * nz, 2* climateMorph)
                     + 0.25 * noise(4 * nx, 4 * nz, 4 * climateMorph);
-                y = map(y, 0, 1.4, 0, 1);
+                y = map(y, 0, 1.35, 0, 1);
                 climate[x][z] = y;
             }
         }
     }
-    
 }
 
 
@@ -192,15 +195,12 @@ public void keyReleased() {
 }
 
 
-
 void setup() {
     size(800, 600, P3D);
     cam = new PeasyCam(this, size/2, 100, size/2, 100);
     cam.setMinimumDistance(1);
     cam.setMaximumDistance(1000);
-
 }
-
 
 
 
@@ -233,13 +233,11 @@ void draw() {
     cloudMorph += cloudMorphSpeed;
     cloudOffset += cloudSpeed;
     
-    
     generate();
 
     background(110, 150, 250);
     noStroke();
     
-
     int h = 125;
     for (int z = 0; z < size-1; z++) {
         beginShape(TRIANGLE_STRIP);
