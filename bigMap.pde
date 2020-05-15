@@ -108,7 +108,6 @@ void generate() {
 }
 
 
-
 public void keyPressed() {
     if (key == 'a' || key == 'A') {
         l = true;
